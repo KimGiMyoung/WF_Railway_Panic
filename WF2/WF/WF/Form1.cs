@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Forms;
 
-
 namespace WF
 {
 	enum MAP_SIZE
@@ -64,9 +63,11 @@ namespace WF
 		System.Windows.Forms.Timer _startTimer = new System.Windows.Forms.Timer();
 		bool _isSafe = true;
 
-		int  _stage = 0;
+		int _stage = 0;
 		bool _isStageClear = false;
 		Random rand = new Random();
+
+		Point _MousePos = new Point();
 
 		public Form1()
 		{
@@ -74,23 +75,23 @@ namespace WF
 
 			for (int i = 0; i < (int)MAP_SIZE.MAP_SIZE_Y; i++)
 			{
-				for(int j = 0; j< (int)MAP_SIZE.MAP_SIZE_X; j++)
+				for (int j = 0; j < (int)MAP_SIZE.MAP_SIZE_X; j++)
 				{
-					_arrPicBox[i,j] = new PictureBox();
+					_arrPicBox[i, j] = new PictureBox();
 					_pos.X += 50;
-					_arrPicBox[i,j].Location = _pos;
-					_arrPicBox[i,j].Size = _size;
-					_arrPicBox[i,j].SizeMode = PictureBoxSizeMode.StretchImage;
-					_arrPicBox[i,j].Click += new EventHandler(SetWay);
+					_arrPicBox[i, j].Location = _pos;
+					_arrPicBox[i, j].Size = _size;
+					_arrPicBox[i, j].SizeMode = PictureBoxSizeMode.StretchImage;
+					_arrPicBox[i, j].Click += new EventHandler(SetWay);
 					_arrPicBox[i, j].BackColor = SystemColors.ActiveCaption;
-					Controls.Add(_arrPicBox[i,j]);
+					Controls.Add(_arrPicBox[i, j]);
 					_arrWayType[i, j] = WAY_TYPE.NONE;
 				}
 
 				_pos.Y += 50;
 				_pos.X = 0;
 			}
-			
+
 			_train = pictureBox1;
 
 			Init();
@@ -138,11 +139,11 @@ namespace WF
 		private void SetBlock()
 		{
 			int temp = 0;
-			while(temp < _stage)
+			while (temp < _stage)
 			{
 				int i = rand.Next(0, (int)MAP_SIZE.MAP_SIZE_Y);
 				int j = rand.Next(0, (int)MAP_SIZE.MAP_SIZE_X);
-				if(_arrPicBox[i,j].Image == null)
+				if (_arrPicBox[i, j].Image == null)
 				{
 					_arrPicBox[i, j].Image = Properties.Resources.Block;
 					temp++;
@@ -196,8 +197,12 @@ namespace WF
 		// 픽쳐박스에 길 이미지 삽입하기
 		private void SetWay(object sender, EventArgs e)
 		{
-			int j = (PointToClient(new Point(MousePosition.X, MousePosition.Y)).X - 50)/ 50;
-			int i = (PointToClient(new Point(MousePosition.X, MousePosition.Y)).Y - 250) / 50;
+			_MousePos.X = MousePosition.X;
+			_MousePos.Y = MousePosition.Y;
+			int j = (PointToClient(_MousePos).X - 50) / 50;
+			int i = (PointToClient(_MousePos).Y - 250) / 50;
+			//int j = (PointToClient(new Point(MousePosition.X, MousePosition.Y)).X - 50)/ 50;
+			//int i = (PointToClient(new Point(MousePosition.X, MousePosition.Y)).Y - 250) / 50;
 
 			// 예외처리
 			if (i >= (int)MAP_SIZE.MAP_SIZE_Y || j >= (int)MAP_SIZE.MAP_SIZE_X) return;
@@ -210,13 +215,13 @@ namespace WF
 				_arrWayType[i, j] = WAY_TYPE.NONE;
 			}
 
-			if(_arrPicBox[i,j].Image == null)
+			if (_arrPicBox[i, j].Image == null)
 			{
 				_arrPicBox[i, j].Image = _image;
 				_arrWayType[i, j] = _wayType;
 			}
 		}
-	
+
 		// 망치 버튼 클릭
 		private void FixButtonClick(object sender, EventArgs e)
 		{
@@ -244,9 +249,12 @@ namespace WF
 			int j = (_traingMidPoint.X - 50) / 50;
 			int i = (_traingMidPoint.Y - 250) / 50;
 
-			if(i <0 || i> (int)MAP_SIZE.MAP_SIZE_Y -1 || j <0 || j > (int)MAP_SIZE.MAP_SIZE_X - 1)
+			if (i < 0 || i > (int)MAP_SIZE.MAP_SIZE_Y - 1 || j < 0 || j > (int)MAP_SIZE.MAP_SIZE_X - 1)
 			{
+				textBox1.Text = "열차 사고";
+				_isSafe = false;
 				_timer.Stop();
+				return;
 			}
 
 			Point tempP = _arrPicBox[i, j].Location;
@@ -259,7 +267,7 @@ namespace WF
 			}
 
 			// 중앙 값이 타일 경계 값일때 다음 타일 검사
-			if(_traingMidPoint.X % 50 == 0 || _traingMidPoint.Y % 50 == 0)
+			if (_traingMidPoint.X % 50 == 0 || _traingMidPoint.Y % 50 == 0)
 			{
 				if (_trainDir == DIR.LEFT)
 				{
@@ -346,8 +354,8 @@ namespace WF
 					break;
 				case WAY_TYPE.WAY_4:
 					{
-						if(_trainDir == DIR.RIGHT) { _trainDir = DIR.DOWN; }
-						else if(_trainDir == DIR.UP) { _trainDir = DIR.LEFT; }
+						if (_trainDir == DIR.RIGHT) { _trainDir = DIR.DOWN; }
+						else if (_trainDir == DIR.UP) { _trainDir = DIR.LEFT; }
 					}
 					break;
 				case WAY_TYPE.WAY_5:
@@ -373,7 +381,7 @@ namespace WF
 
 		private void ChangeTrainImage()
 		{
-			if(_isTrainHorizon)// 가로
+			if (_isTrainHorizon)// 가로
 			{
 				_train.Image = Properties.Resources.train2;
 				_train.Size = _trainSize2;
@@ -389,7 +397,7 @@ namespace WF
 
 		private void SetTrainMidPos()
 		{
-			if(_isTrainHorizon)
+			if (_isTrainHorizon)
 			{
 				_traingMidPoint.X = _train.Location.X + 9;
 				_traingMidPoint.Y = _train.Location.Y + 15;
@@ -427,7 +435,7 @@ namespace WF
 					break;
 				case WAY_TYPE.WAY_1:
 					{
-						if(_trainDir != DIR.LEFT && _trainDir != DIR.RIGHT ) {_isSafe = false;}
+						if (_trainDir != DIR.LEFT && _trainDir != DIR.RIGHT) { _isSafe = false; }
 					}
 					break;
 				case WAY_TYPE.WAY_2:
@@ -465,7 +473,7 @@ namespace WF
 			if (_isStageClear == false) return;
 			_stage += 2;
 			Init();
-			textBox1.Text = "스테이지 : " + ((_stage / 2)+1).ToString() + " 시작";
+			textBox1.Text = "스테이지 : " + ((_stage / 2) + 1).ToString() + " 시작";
 		}
 
 		private void button10_Click(object sender, EventArgs e)
@@ -478,7 +486,7 @@ namespace WF
 		private void button11_Click(object sender, EventArgs e)
 		{
 			Init();
-			if(_stage == 0)
+			if (_stage == 0)
 			{
 				textBox1.Text = "스테이지 : 1 시작";
 			}
